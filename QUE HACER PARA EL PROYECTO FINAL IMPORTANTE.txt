@@ -36,10 +36,10 @@ USAR EL CODIGO DE AC3 QUE APSO EL PROFE
 
 
 
-CADA ALCOHON ES MI VARIABLE DE DESICION 
+CADA halcon ES MI VARIABLE DE DESICION 
 
 
-X_m es l poblacion promedio de halcones actuales
+X_m es l poblacion promedio de halcon actuales
 
 fitness, el valor que me da intercambiando los valores en al funcion objetivo
 
@@ -53,7 +53,7 @@ e_0 es un estado inicial de energia
 
 E tiene un decresiiento que dura en las iteraciones
 
-|E| > 1 al alcohon busca otra region 
+|E| > 1 al halcon busca otra region 
 
 |E| <=
 
@@ -71,7 +71,7 @@ anuncio de diario o revista es o aditivo entre asmbos no pueden haber mas de 280
 
 matriz x variables de desicion 
 
-yo ecojo la cantidad de alcohones 
+yo ecojo la cantidad de halcon 
 en mi paper hay aprox 30 pero se usan 10 [corroborar]
 
 
