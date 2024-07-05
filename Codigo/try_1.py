@@ -1,3 +1,6 @@
+"1er intento zarate de implementar el algoritmo HHO"
+
+
 import numpy as np
 
 # Parámetros de los anuncios con: [clientes potenciales, costo min, costo max, valorización min, valorización max, max anuncios]

@@ -1,0 +1,200 @@
+********************************************************************************************
+Fase de exploracion 
+____________________________________________________________________________________________
+Ecuacion del conejo
+
+[1]	X(t+1) = {X_randt()- r_1 |X_rand(t) -2r_2 X(t)|		q >= 0.5 
+	 	 {(X_rabbit(t) -X_m(t)) -r_3 (LB+ r_4 (UB-LB))	q <= 0.5
+
+Desglose
+	X(t+1) 	      =	Posicion del vector Halcon en la proxima iteracion t
+	X_rabbit(t)   =	posicion del conejo
+	X(t) 	      =	es la actual posicion del vector del Halcon
+	r_1 	      =	numero random entre (0,1) que se actualiza en cada iteracion
+	r_2 	      =	numero random entre (0,1) que se actualiza en cada iteracion
+	r_3 	      =	numero random entre (0,1) que se actualiza en cada iteracion
+	r_4 	      =	numero random entre (0,1) que se actualiza en cada iteracion
+	q 	      =	numero random entre (0,1) que se actualiza en cada iteracion
+	LB 	      = limite inferior de las variables
+	UB	      = limite superior de las variables
+	X_rand(t)     = es un Halcon selecionado randomizadamente de la poblacion
+	X_m es        =	es la posición promedio de la población actual de halcones
+
+La parte de q >= 0.5 
+	es la regla que genera soluciones basada en lugares randomizados y otro Halcon
+La parde de q <= 0.5
+	diferencia entre las ubicaciones de la ubicacion del mejor y el promedio del grupo
+	mas un componente escalado aleatoriamente basado en el rango de variables
+
+r_n muestra la variabilidad de la naturaleza
+
+____________________________________________________________________________________________
+Ecuacion  de la posicion promedio de los Halcones
+
+[2]	X_m(t) = 1/n*Sum N i=1 (X_i(t))
+
+Desglose
+	X_i(t) 	      =	indica la ubicacion de cada Halcon en la iteracion t
+	N 	      =	total de Halcones en la poblacion
+
+____________________________________________________________________________________________
+********************************************************************************************
+Fase de transicion desde exploracion a explotacion
+____________________________________________________________________________________________
+
+La energia del conejo dirante la fase de explotacion varia  con la siguiente ecuacion
+
+Ecuacion Energia del Conejo
+
+[3]	E = 2*E_0(1-t/T)
+
+Desglose
+	E 	      =	Indica la energia de escape de la presa
+	T	      =	Es el numero maximo de iteraciones
+	E_0	      =	Es el estado incial de su energia, este puede, cambiar 
+			randomicamente entre el intervalo de (-1, 1) en cada iteracion
+				Si E_0 esta entre (-1, 0) El conejo esta debil fisicamente
+				Si E_0 esta entre (0, 1) El conejo se esta fortaleciendo
+			Durante cada iteracion E tiene a decrecer
+
+			Cuando |E| < 1 los Halcones buscan (Exploracion)
+			Cuando |E| >= 1 los Halcones entran en ataque (Explotacion)
+
+	Si r <  0.5 El conejo escapa existosamente
+	Si r >= 0.5 El conejo no escapa exitosamente
+
+	Si |E| >= 0.5 El Halcon realiza un asedio Suave
+	Si |E| <  0.5 El Halcon realiza un asedio Duro
+
+____________________________________________________________________________________________
+Asedio Suave
+
+Cuando r >= 0.5 El conejo baja probabilidad de escape
+y |E|>= 0.5 el Halcon realiza un asedio suave
+
+[4]	X(t+1) = ΔX(t) - E | JX_rabbit(t) -X(t)|
+
+[5]	ΔX(t) = X_rabbit(t) -X(t)
+
+J = 2(1 - r_5)
+
+Desglose
+	ΔX(t) 	Es la diferencia entre el vector de posicion del conejo y la ubicacion actual
+	      	en la iteracion t
+	r_5 	es un numero random entre (0, 1)
+	J	Representa la fuerza de salto aleatorio del conejo durante el procedimento
+		de escape. J cambia aleatoriamente en cada iteracion para simular naturaleza
+
+____________________________________________________________________________________________
+Asedio Duro
+
+Cuando r >= 0.5 El conejo baja probabilidad de escape
+y |E| < 0.5 El Halcon realiza un asedio duro
+
+[6]	X(t+1) = X_rabbit(t) - E |ΔX(t)|
+
+____________________________________________________________________________________________
+Asedio suave con inmersiones rapidas progresivas
+
+Cuando r < 0.5 El conejo con alta probabilidad de escape
+y |E|>= 0.5 el Halcon realiza un asedio suave
+
+Usamos el concepto de vuelo de levy (LF) para imitar el moviento en zigzag reales de las 
+presas durante la fase de escape y los buceos irregulares
+y al ser suave se supuso que el halcon realizara una "Decision" de su proximo movimento
+basado en la siguiente regla
+
+[7]	Y = X_rabbit(t) - E | JX_rabbit(t) - X(t)| 
+
+Luego de detectar si el buceo anterior es un buen buceo o no
+Si no es razonable (la preza esta realizando movimientos mas engañosos)
+tambien se comenzara a realizar buceso mas irregulares abruptos y rapidos al acercarse al
+conejo,. suponiendo que se sumergiran con el patron de LF se utiliza la siguiente regla
+
+[8]	Z = Y + S * LF(D)
+
+Desglose
+	D 	es la dimencion del problema 
+	S 	es un vector aleatorio de tamaño 1*D
+	LF 	funcion de Levy que se calcula en...
+
+[9]	LF(x) = 0.01 * (u * sigma) / |v|^(1/beta) where sigma = ( (Gamma(1 + beta) * sin(pi * beta / 2)) / (Gamma((1 + beta) / 2) * beta * 2^((beta - 1) / 2)) )^(1/beta)
+
+
+Desglose 
+	u	valores randomicos entre (0, 1)
+	v	valores randomicos entre (0, 1)
+	β	Constante establecida en (1.5)
+
+
+Por lo tanto la estrategia final para actualizar las posiciones de los halcones en la 
+fase de asedio suave es 
+
+[10]	X(t+1) = {Y if F(Y) < F(X(t))
+         	 {Z if F(Z) < F(X(t))  
+
+Desglose 
+	Y  = Y = X_rabbit(t) - E | JX_rabbit(t) - X(t)| 
+	Z = Y + S * LF(D)
+
+____________________________________________________________________________________________
+Asedio duro con inmersiones rapidas progresivas
+
+Cuando r < 0.5 El conejo con alta probabilidad de escape
+y |E| < 0.5 el Halcon realiza un asedio duro
+
+
+Regla de asedio duro 
+
+[11]	X(t+1) = {Y if F(Y) < F(X(t))
+         	 {Z if F(Z) < F(X(t))  
+
+Desglose 
+
+	Y  = [12]
+	Z = [13]
+	X_m(t) = 1/n*Sum N i=1 (X_i(t))
+
+
+[12]	Y = X_rabbit(t) - E | JX_rabbit(t) - X_m(t)| 
+	
+Desglose
+	X_m(t) = 1/n*Sum N i=1 (X_i(t))
+
+[13]	Y + S * LF(D)
+
+____________________________________________________________________________________________
+Algoritmo del HHO
+
+Inputs: The population sizeNand maximum number ofiterationsT
+Outputs: The location of rabbit and its fitness valueInitialize the random populationXi(i=1,2,...,N)
+while(stopping condition is not met)do
+	Calculate the fitness values of hawks
+	Set X_rabbit as the location of rabbit (best location)
+	for(each hawk (X_i))do
+		Update the initial energy E_0 and jump strength J ▷ E_0=2rand()-1, J=2(1-rand())
+		Update the E using Eq. (3)
+		if(|E|≥1)then	▷Exploration phaseUpdate the location vector using Eq. (1)
+		if(|E|<1)then▷Exploitation phase
+			if(r≥0.5 and|E|≥0.5 )then▷Soft besiege
+				Update the location vector using Eq. (4)
+			else if(r≥0.5 and|E|<0.5 )then	▷Hard besiege	
+				Update the location vector using Eq. (6)
+			else if(r<0.5 and|E|≥0.5 )then	▷Soft besiege with progressive rapid dives
+				Update the location vector using Eq. (10)
+			else if(r<0.5 and|E|<0.5 )then	▷Hard besiegewith progressive rapid dives
+				Update the location vector using Eq. (11)
+Return X_rabbit
+
+____________________________________________________________________________________________
+Complejidad computacional
+
+Note que la complejidad computacional del HHO depende principalmente de tres procesos: 
+inicialización, evaluación de la aptitud y actualización de los halcones. 
+Note que con N halcones, la complejidad computacional del proceso de inicialización es O(N).
+ La complejidad computacional del mecanismo de actualización es O(T×N) + O(T×N×D), 
+que se compone de la búsqueda de la mejor ubicación y la actualización del 
+vector de ubicación de todos los halcones, donde T es el número máximo de iteraciones 
+y D es la dimensión de problemas específicos. Por lo tanto, la complejidad computacional
+ de HHO es O(N×(T+TD+1)).
+

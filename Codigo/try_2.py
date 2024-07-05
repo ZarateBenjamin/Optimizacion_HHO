@@ -1,3 +1,5 @@
+"2do intento zarate que probe en colab ta de la doga (dog-a) translate it to = (perro-a) == (perra)"
+
 "[1]"
 import random
 import numpy as np
