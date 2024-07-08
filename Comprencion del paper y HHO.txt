@@ -1,7 +1,7 @@
 ********************************************************************************************
 Fase de exploracion 
 ____________________________________________________________________________________________
-Ecuacion del conejo
+Ecuacion de la posicion del Halcon
 
 [1]	X(t+1) = {X_randt()- r_1 |X_rand(t) -2r_2 X(t)|		q >= 0.5 
 	 	 {(X_rabbit(t) -X_m(t)) -r_3 (LB+ r_4 (UB-LB))	q <= 0.5
@@ -173,17 +173,20 @@ while(stopping condition is not met)do
 	Set X_rabbit as the location of rabbit (best location)
 	for(each hawk (X_i))do
 		Update the initial energy E_0 and jump strength J ▷ E_0=2rand()-1, J=2(1-rand())
-		Update the E using Eq. (3)
-		if(|E|≥1)then	▷Exploration phaseUpdate the location vector using Eq. (1)
+		Update the E using E = 2*E_0(1-t/T)
+		if(|E|≥1)then	▷Exploration phaseUpdate the location vector using X(t+1) = {X_randt()- r_1 |X_rand(t) -2r_2 X(t)|		q >= 0.5 
+	 	 																			 {(X_rabbit(t) -X_m(t)) -r_3 (LB+ r_4 (UB-LB))	q <= 0.5
 		if(|E|<1)then▷Exploitation phase
 			if(r≥0.5 and|E|≥0.5 )then▷Soft besiege
-				Update the location vector using Eq. (4)
+				Update the location vector using X(t+1) = ΔX(t) - E | JX_rabbit(t) -X(t)|
 			else if(r≥0.5 and|E|<0.5 )then	▷Hard besiege	
-				Update the location vector using Eq. (6)
+				Update the location vector using X(t+1) = X_rabbit(t) - E |ΔX(t)|
 			else if(r<0.5 and|E|≥0.5 )then	▷Soft besiege with progressive rapid dives
-				Update the location vector using Eq. (10)
+				Update the location vector using [10]	X(t+1) = {Y if F(Y) < F(X(t))
+         	 													 {Z if F(Z) < F(X(t))  
 			else if(r<0.5 and|E|<0.5 )then	▷Hard besiegewith progressive rapid dives
-				Update the location vector using Eq. (11)
+				Update the location vector using [11]	X(t+1) = {Y if F(Y) < F(X(t))
+         	 													 {Z if F(Z) < F(X(t))  
 Return X_rabbit
 
 ____________________________________________________________________________________________
@@ -198,3 +201,42 @@ vector de ubicación de todos los halcones, donde T es el número máximo de ite
 y D es la dimensión de problemas específicos. Por lo tanto, la complejidad computacional
  de HHO es O(N×(T+TD+1)).
 
+____________________________________________________________________________________________
+E-constraint
+
+Max = q_1 * x_1 + q_2 * x_2 + q_3 * x_3 + q_4 * x_4 + q_5 * x_5
+Sujeto a:
+
+c_1 * x_1 + c_2 * x_2 + c_3 * x_3 + c_4 * x_4 + c_5 * x_5 <= e
+x_1 <= 15
+x_2 <= 10
+x_3 <= 25
+x_4 <= 4
+x_5 <= 30
+c_1 * x_1 + c_2 * x_2 <= 3800
+c_3 * x_3 + c_4 * x_4 <= 2800
+c_3 * x_3 + c_5 * x_5 <= 3500
+65 <= q_1 <= 85
+90 <= q_2 <= 95
+40 <= q_3 <= 60
+60 <= q_4 <= 80
+20 <= q_5 <= 30
+160 <= c_1 <= 200
+300 <= c_2 <= 350
+40 <= c_3 <= 80
+100 <= c_4 <= 120
+10 <= c_5 <= 20
+
+
+
+x1 = 15.0
+x2 = 2.0
+x3 = 25.0
+x4 = 4.0
+x5 = 30.0
+q1 = 85
+q2 = 95
+q3 = 60
+q4 = 80
+q5 = 30
+Calidad Total = 4185.0
