@@ -61,3 +61,19 @@ print(f"q3 = {q3_value}")
 print(f"q4 = {q4_value}")
 print(f"q5 = {q5_value}")
 print(f"Calidad Total = {pulp.value(problem.objective)}")
+
+
+'''
+Resultado
+x_1 = 15.0
+x_2 = 2.0
+x_3 = 25.0
+x_4 = 4.0
+x_5 = 30.0
+q1 = 85
+q2 = 95
+q3 = 60
+q4 = 80
+q5 = 30
+Calidad Total = 4185.0
+'''

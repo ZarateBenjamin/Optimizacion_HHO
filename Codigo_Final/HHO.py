@@ -18,18 +18,38 @@ import time
 
 
 
-def HHO(objf,lb,ub,dim,SearchAgents_no,Max_iter):
+def objective_function(X):
+    # Suponiendo que X es un array con las cantidades de cada tipo de anuncio
+    # X = [x1, x2, x3, x4, x5]
+    
+    # Calidades y costos medios estimados para simplificar
+    quality_scores = [75, 92.5, 50, 70, 25]  # Media de los rangos de valorización
+    costs = [180, 325, 60, 110, 15]  # Media de los rangos de costos
+    
+    # Calcular calidad total y costo total
+    total_quality = sum(x * q for x, q in zip(X, quality_scores))
+    total_cost = sum(x * c for x, c in zip(X, costs))
+    
+    # Restricciones de cantidad máxima de anuncios
+    max_ads = [15, 10, 25, 4, 30]
+    if any(x > max_ad for x, max_ad in zip(X, max_ads)):
+        return float('inf')  # Penalización por violar las restricciones de cantidad
+    
+    # Restricciones de costos
+    if (X[0]*180 + X[1]*325 > 3800) or (X[2]*60 + X[3]*110 > 2800) or (X[2]*60 + X[4]*15 > 3500):
+        return float('-inf')  # Penalización por violar las restricciones de costo
+    
+    # La función objetivo podría ser maximizar la calidad mientras se minimiza el costo
+    # Escalarizar para tratar de equilibrar calidad y costos
+    return total_quality - total_cost
 
-    #dim=30
-    #SearchAgents_no=50
-    #lb=-100
-    #ub=100
-    #Max_iter=500
-        
+
+def HHO(objf,lb,ub,dim,SearchAgents_no,Max_iter):
+       
     
     # initialize the location and Energy of the rabbit
     Rabbit_Location=numpy.zeros(dim)
-    Rabbit_Energy=float("inf")  #change this to -inf for maximization problems
+    Rabbit_Energy=float("-inf")  #change this to -inf for maximization problems
     
     if not isinstance(lb, list):
         lb = [lb for _ in range(dim)]
@@ -67,7 +87,7 @@ def HHO(objf,lb,ub,dim,SearchAgents_no,Max_iter):
             fitness=objf(X[i,:])
             
             # Update the location of Rabbit
-            if fitness<Rabbit_Energy: # Change this to > for maximization problem
+            if fitness>Rabbit_Energy: # Change this to > for maximization problem
                 Rabbit_Energy=fitness 
                 Rabbit_Location=X[i,:].copy() 
             
@@ -167,4 +187,4 @@ def Levy(dim):
 
 
 
-HHO(dim=30,SearchAgents_no=50,lb=-100,ub=100,Max_iter=500)
+HHO(objf=objective_function, lb=[0, 0, 0, 0, 0], ub=[15, 10, 25, 4, 30], dim=5, SearchAgents_no=50, Max_iter=500)

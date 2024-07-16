@@ -186,9 +186,50 @@ def HHO(objf, lb, ub, dim, SearchAgents_no, Max_iter):
 lb = np.zeros(5)  # Límites inferiores
 ub = np.array([15, 10, 25, 4, 30])  # Límites superiores
 dim = 5
-SearchAgents_no = 1000
-Max_iter = 2000
+SearchAgents_no = 100
+Max_iter = 200
 
 best_position, best_quality = HHO(objective_function, lb, ub, dim, SearchAgents_no, Max_iter)
 print("Best Position:", np.round(best_position).astype(int))
+print(best_position)
 print("Best Quality:", best_quality)
+
+
+def verificar_restricciones(x):
+    x1, x2, x3, x4, x5 = x
+    
+    if not (0 <= x1 <= 15) or not (0 <= x2 <= 10) or not (0 <= x3 <= 25) or not (0 <= x4 <= 4) or not (0 <= x5 <= 30):
+        return False
+    if not (160 * x1 + 300 * x2 <= 3800):
+        return False
+    if not (40 * x3 + 100 * x4 <= 2800):
+        return False
+    if not (40 * x3 + 10 * x5 <= 3500):
+        return False
+    
+    return True
+
+def fit_maxi(solution, values):
+    return sum(s * v for s, v in zip(solution, values))
+
+def fit_mini(solution, costs):
+    return sum(s * c for s, c in zip(solution, costs))
+
+def fit(x, omega_p, omega_q, e_pq_xbest, e_q_xbest, C):
+    # Asumiendo que las funciones Z_1 y Z_2 ya están definidas y los e_pq_xbest y e_q_xbest calculados
+    z1 = 65*x[0] + 85*x[1] + 40*x[2] + 60*x[3] + 30*x[4]
+    z2 = 160*x[0] + 300*x[1] + 40*x[2] + 100*x[3] + 10*x[4]
+
+    j_new = ((z1 / e_pq_xbest) * omega_p) + (((C - z2) / (C - e_q_xbest)) * omega_q)
+    return j_new
+
+# Ejemplo de uso
+omega_p = 0.3
+omega_q = 0.7
+e_pq_xbest = 3175  # Valor óptimo de Z_1 obtenido de iteraciones anteriores
+e_q_xbest = 0  # Valor óptimo de Z_2 obtenido de iteraciones anteriores
+C = 10000  # Cota superior para Z_2 como calculado previamente
+
+
+
+

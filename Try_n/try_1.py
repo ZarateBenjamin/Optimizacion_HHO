@@ -1,82 +1,57 @@
-import numpy as np
-from scipy.special import gamma
-
-# Definición de los dominios de las variables
-domains = {
-    'x1': list(range(16)),  # 0 a 15
-    'x2': list(range(11)),  # 0 a 10
-    'x3': list(range(26)),  # 0 a 25
-    'x4': list(range(5)),   # 0 a 4
-    'x5': list(range(31))   # 0 a 30
-}
-
-# Pesos para cada objetivo
-w_cost = 0.7  # Peso para el costo
-w_quality = 0.3  # Peso para la calidad
-
-# Función de calidad
-def quality_function(x1, x2, x3, x4, x5):
-    quality_scores = np.array([75, 92.5, 50, 70, 25])  # Puntuaciones promedio de calidad
-    quantities = np.array([x1, x2, x3, x4, x5])
-    return np.dot(quality_scores, quantities)
-
-# Función de costo
-def cost_function(x1, x2, x3, x4, x5):
-    costs = np.array([180, 325, 60, 110, 15])  # Costos promedio
-    quantities = np.array([x1, x2, x3, x4, x5])
-    return np.dot(costs, quantities)
-
-# Función escalonada
-def scalarized_objective(x1, x2, x3, x4, x5):
-    total_quality = quality_function(x1, x2, x3, x4, x5)
-    total_cost = cost_function(x1, x2, x3, x4, x5)
-    return w_cost * total_cost - w_quality * total_quality  # Minimizar la función escalonada
-
-epsilon = 5000  # Calidad mínima requerida
-
-# Restricciones, incluyendo la calidad
-constraints = {
-    ('x1', 'x2'): lambda x1, x2: 160 * x1 + 300 * x2 <= 3800,
-    ('x3', 'x4'): lambda x3, x4: 40 * x3 + 100 * x4 <= 2800,
-    ('x3', 'x5'): lambda x3, x5: 40 * x3 + 10 * x5 <= 3500,
-    'quality': lambda x1, x2, x3, x4, x5: quality_function(x1, x2, x3, x4, x5) >= epsilon
-}
-
-# Revisar y actualizar los dominios de acuerdo a todas las restricciones
-def revise(x, y):
-    revised = False
-    x_domain = domains[x]
-    y_domain = domains[y]
-    all_constraints = [constraints[constraint] for constraint in constraints if constraint[0] == x and constraint[1] == y]
-    for x_value in x_domain[:]:
-        satisfies = False
-        for y_value in y_domain:
-            if all(constraint(x_value, y_value) for constraint in all_constraints):
-                satisfies = True
-                break
-        if not satisfies:
-            x_domain.remove(x_value)
-            revised = True
-    return revised
-
-# Algoritmo AC3 para garantizar la consistencia
-def ac3(arcs):
-    queue = arcs[:]
-    while queue:
-        (x, y) = queue.pop(0)
-        revised = revise(x, y)
-        if revised:
-            neighbors = [neighbor for neighbor in arcs if neighbor[1] == x]
-            queue.extend(neighbors)
-
-arcs = [
-    ('x1', 'x2'), ('x2', 'x1'), 
-    ('x3', 'x4'), ('x4', 'x3'), 
-    ('x3', 'x5'), ('x5', 'x3')
+# Definiciones iniciales
+dimension = 5
+costs = [160, 300, 40, 100, 10]
+values = [65, 90, 40, 60, 20]
+domains = [
+    (0, 15), # x1
+    (0, 10), # x2
+    (0, 25), # x3
+    (0, 4),  # x4
+    (0, 30)  # x5
 ]
 
-ac3(arcs)
+# Restricciones definidas como funciones
+def c1(x1, x2):
+    return costs[0]*x1 + costs[1]*x2 <= 3800
 
-print("Dominios después de AC3:")
-for key, value in domains.items():
-    print(f"{key}: {value}\n")
+def c2(x3, x4):
+    return costs[2]*x3 + costs[3]*x4 <= 2800
+
+def c3(x3, x5):
+    return costs[2]*x3 + costs[4]*x5 <= 3500
+
+def verificar_restricciones(solution):
+    return c1(solution[0], solution[1]) and c2(solution[2], solution[3]) and c3(solution[2], solution[4])
+
+# Funciones de ajuste
+def fit_maxi(solution):
+    return sum(solution[i] * values[i] for i in range(dimension))
+
+def fit_mini(solution):
+    return sum(solution[i] * costs[i] for i in range(dimension))
+
+def fit(solution, weights, max_fit, min_fit, c_hat=10000):
+    if not verificar_restricciones(solution):
+        return float('inf')  # Consideramos una solución no válida como infinitamente mala
+
+    fit_max = fit_maxi(solution)
+    fit_min = fit_mini(solution)
+
+    scalarized_fit = 0
+    for p in range(len(weights)):
+        for q in range(len(weights)):
+            if p != q:
+                term_max = (fit_max / max_fit) * weights[p]
+                term_min = (c_hat - fit_min) / (c_hat - min_fit) * weights[q]
+                scalarized_fit += term_max + term_min
+
+    return scalarized_fit
+
+# Ejemplo de uso
+solution = [5, 10, 15, 4, 25]  # Ejemplo de solución
+weights = [0.3, 0.7, 0.1, 0.1, 0.4]  # Ponderaciones para cada término de la función objetiva
+max_fit = 1000  # Valor estimado o conocido como máximo para fit_maxi
+min_fit = 500  # Valor estimado o conocido como mínimo para fit_min
+
+resultado = fit(solution, weights, max_fit, min_fit)
+print("Valor de la función objetiva ajustada:", resultado)
