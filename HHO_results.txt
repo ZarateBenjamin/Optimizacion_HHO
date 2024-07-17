@@ -1,1 +1,0 @@
-w_p, w_q, Best_position, Best_fitness
