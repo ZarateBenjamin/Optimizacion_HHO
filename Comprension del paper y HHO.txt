@@ -255,7 +255,7 @@ y D es la dimensión de problemas específicos. Por lo tanto, la complejidad com
 ____________________________________________________________________________________________
 Funcion Objetiva Normal
 
-Max Z_1 = 65x_1 + 85x_2 + 40x_3 + 60x_4 + 20x_5
+Max Z_1 = 65x_1 + 90x_2 + 40x_3 + 60x_4 + 20x_5
 
 Min Z_2 = 160x_1 + 300x_2 + 40x_3 + 100x_4 + 10x_5
 
