@@ -2,6 +2,12 @@ import numpy as np
 import pandas as pd
 import random
 import math
+import sys
+import matplotlib.pyplot as plt
+from io import StringIO
+import os
+import csv
+import itertools
 
 # Definimos los dominios de las variables
 domains = {
@@ -113,7 +119,26 @@ def fitness(pos):
     x1, x2, x3, x4, x5 = pos
     return scalarized_Z([x1, x2, x3, x4, x5], w_p, w_q)
 
-import numpy as np
+
+def sigmoide_wacha(x):
+    a = 1 / (1 + np.exp(-8*x + 4))
+    if a > 0.5:
+        a = 1
+    else:
+        a = 0
+    return a
+
+def valor_sigmoideado(arr):
+    result = []
+    for n in arr:
+        aux = n - int(n)
+        s = sigmoide_wacha(aux)
+        n = int(n) + s
+        result.append(n)
+    return result
+
+
+
 
 # Definir las funciones sigmoides y find_y_interval para cada caso
 
@@ -220,7 +245,8 @@ def HHO(N, T, dim, w_p, w_q):
         for i in range(N):
             # Asegurar que los halcones estén dentro de los límites
             halcones[i] = np.clip(halcones[i], lb, ub)
-            halcones[i] = master_sigmoid(halcones[i])
+            #halcones[i] = master_sigmoid(halcones[i])
+            halcones[i] = valor_sigmoideado(halcones[i])
 
             # Calcular la aptitud del halcón
             if cumple_restricciones(halcones[i]):
@@ -239,7 +265,8 @@ def HHO(N, T, dim, w_p, w_q):
                 q = random.random()
                 if q >= 0.5:
                     halcones[i] = X_rabbit - np.random.uniform() * np.abs(X_rabbit - 2 * np.random.uniform() * halcones[i])
-                    halcones[i] = master_sigmoid(halcones[i])
+                    ##halcones[i] = master_sigmoid(halcones[i])
+                    halcones[i] = valor_sigmoideado(halcones[i])
                     '''
                     while True:
                         if cumple_restricciones(halcones[i]):
@@ -249,7 +276,8 @@ def HHO(N, T, dim, w_p, w_q):
                     '''
                 else:
                     halcones[i] = (X_rabbit - halcones[i]) - np.random.uniform() * (lb + np.random.uniform() * (ub - lb))
-                    halcones[i] = master_sigmoid(halcones[i])
+                    #halcones[i] = master_sigmoid(halcones[i])
+                    halcones[i] = valor_sigmoideado(halcones[i])
                     '''
                     while True:
                         if cumple_restricciones(halcones[i]):
@@ -263,30 +291,36 @@ def HHO(N, T, dim, w_p, w_q):
                     if abs(E) >= 0.5:
                         ΔX = X_rabbit - halcones[i]
                         halcones[i] = ΔX - E * np.abs(J * X_rabbit - halcones[i])
-                        halcones[i] = master_sigmoid(halcones[i])
+                        #halcones[i] = master_sigmoid(halcones[i])
+                        halcones[i] = valor_sigmoideado(halcones[i])
                     else:
                         ΔX = X_rabbit - halcones[i]
                         halcones[i] = X_rabbit - E * np.abs(ΔX)
-                        halcones[i] = master_sigmoid(halcones[i])
+                        #halcones[i] = master_sigmoid(halcones[i])
+                        halcones[i] = valor_sigmoideado(halcones[i])
                 else:
                     if abs(E) >= 0.5:
                         Y = X_rabbit - E * np.abs(J * X_rabbit - halcones[i])
                         Z = Y + np.random.uniform() * Levy(dim)
                         if fitness(Y) < fitness(halcones[i]):
                             halcones[i] = Y
-                            halcones[i] = master_sigmoid(halcones[i])
+                            #halcones[i] = master_sigmoid(halcones[i])
+                            halcones[i] = valor_sigmoideado(halcones[i])
                         elif fitness(Z) < fitness(halcones[i]):
                             halcones[i] = Z
-                            halcones[i] = master_sigmoid(halcones[i])
+                            #halcones[i] = master_sigmoid(halcones[i])
+                            halcones[i] = valor_sigmoideado(halcones[i])
                     else:
                         Y = X_rabbit - E * np.abs(J * X_rabbit - halcones[i])
                         Z = Y + np.random.uniform() * Levy(dim)
                         if fitness(Y) < fitness(halcones[i]):
                             halcones[i] = Y
-                            halcones[i] = master_sigmoid(halcones[i])
+                            #halcones[i] = master_sigmoid(halcones[i])
+                            halcones[i] = valor_sigmoideado(halcones[i])
                         elif fitness(Z) < fitness(halcones[i]):
                             halcones[i] = Z
-                            halcones[i] = master_sigmoid(halcones[i])
+                            ##halcones[i] = master_sigmoid(halcones[i])
+                            halcones[i] = valor_sigmoideado(halcones[i])
 
             # Asegurar que los halcones estén dentro de los límites después de moverse
             halcones[i] = np.clip(halcones[i], lb, ub)
@@ -305,11 +339,6 @@ w_q = 0.7  # Peso para la calidad
 best_position = HHO(N, T, dim, w_p, w_q)
 print("Mejor posición encontrada:", best_position)
 
-import numpy as np
-import pandas as pd
-import random
-import math
-import os
 
 def perform_multiple_HHO(N, T, dim, C, w_p, w_q, filename):
     results = []
@@ -346,7 +375,6 @@ for w_p, w_q, filename in scenarios:
 
 print(outputs)
 
-import matplotlib.pyplot as plt
 
 def calculate_objectives(filename):
     # Leer los datos del CSV
@@ -381,10 +409,6 @@ filenames = [
 
 plot_pareto_front(filenames)
 
-import sys
-import pandas as pd
-from io import StringIO
-import os
 
 def capture_and_save_output(N, T, dim, w_p, w_q, filename):
     # Redirigir la salida estándar
@@ -438,8 +462,6 @@ w_q = 1
 
 capture_and_save_output(N, T, dim, w_p, w_q, "Resultado_Scalarized_HHO;W_P_0;W_Q_1.csv")
 
-import matplotlib.pyplot as plt
-import pandas as pd
 
 def plot_csv_files(filenames):
     plt.figure(figsize=(10, 6))
@@ -478,8 +500,6 @@ plot_csv_files(filenames)
 dominio x_1 = [0,15]
 1/(1+e^(-0.6(x-7.5)))
 '''
-import numpy as np
-import matplotlib.pyplot as plt
 
 # Definir la función sigmoide
 def sigmoid_x_1(x):
@@ -600,7 +620,6 @@ dominio x_4 = [0,4]
 1/(1+e^(-2.5(x-2)))
 '''
 
-import numpy as np
 
 # Definir la función sigmoide
 def sigmoid_x_4(x):
@@ -628,7 +647,6 @@ interval = find_y_interval_x_4(x_value)
 print(f"El valor x = {x_value} cae en el intervalo y = {interval}")
 
 # Graficar la sigmoide y los intervalos en el eje y
-import matplotlib.pyplot as plt
 
 x = np.linspace(0, 4, 400)
 y = sigmoid_x_4(x)
@@ -687,3 +705,81 @@ plt.title('Sigmoide con Intervalos en el Eje y')
 plt.legend()
 plt.grid(True)
 plt.show()
+
+
+
+def cumple_restricciones(valores):
+    x1, x2, x3, x4, x5 = valores
+
+    # Restricciones individuales de las variables
+    if not (0 <= x1 <= 15 and 0 <= x2 <= 10 and 0 <= x3 <= 25 and 0 <= x4 <= 4 and 0 <= x5 <= 30):
+        return False
+
+    # Restricciones de presupuesto para diferentes medios
+    if not (160*x1 + 300*x2 <= 3800):
+        return False
+    if not (40*x3 + 100*x4 <= 2800):
+        return False
+    if not (40*x3 + 10*x5 <= 3500):
+        return False
+
+    return True
+
+# Dominios de cada variable
+dominios = [
+    range(16),  # x1 de 0 a 15
+    range(11),  # x2 de 0 a 10
+    range(26),  # x3 de 0 a 25
+    range(5),   # x4 de 0 a 4
+    range(31)   # x5 de 0 a 30
+]
+
+# Crear archivo CSV para guardar los resultados
+with open('data/pareto.csv', 'w', newline='') as file:
+    writer = csv.writer(file)
+    # Escribir el encabezado del CSV
+    writer.writerow(['x1', 'x2', 'x3', 'x4', 'x5'])
+
+    # Generar todas las combinaciones posibles
+    for combinacion in itertools.product(*dominios):
+        if cumple_restricciones(combinacion):
+            # Escribir la combinación en el archivo CSV si cumple las restricciones
+            writer.writerow(combinacion)
+
+
+
+def plot_pareto_front(filenames, specific_values):
+    plt.figure(figsize=(10, 6))
+
+    for filename in filenames:
+        min_z2, max_z1 = calculate_objectives(filename)
+        plt.scatter(min_z2, max_z1, label=f'{filename[:-4]}')  # Remueve '.csv' del nombre para la etiqueta
+
+    # Evaluar el punto específico y mostrarlo en el gráfico
+    specific_min_z2 = min_Z2(specific_values)
+    specific_max_z1 = max_Z1(specific_values)
+    plt.scatter(specific_min_z2, specific_max_z1, color='green', s=100, label='Punto Específico')
+
+    plt.title('Frontera de Pareto')
+    plt.xlabel('Min Z2')
+    plt.ylabel('Max Z1')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+# Nombres de los archivos CSV generados
+filenames = [
+    "data/pareto.csv"
+]
+
+# Valores específicos para el punto verde
+# Ejemplo de configuración y ejecución del algoritmo
+N = 10  # Tamaño de la población
+T = 50 # Número máximo de iteraciones
+dim = 5  # Dimensiones del problema
+w_p = 0  # Peso para el costo
+w_q = 1  # Peso para la calidad
+
+specific_values = HHO(N, T, dim, w_p, w_q)
+
+plot_pareto_front(filenames, specific_values)
