@@ -2,6 +2,11 @@ import numpy as np
 import pandas as pd
 import random
 import math
+import os
+import matplotlib.pyplot as plt
+import sys
+from io import StringIO
+
 
 # Definimos los dominios de las variables
 domains = {
@@ -80,6 +85,16 @@ def cumple_restricciones(valores):
 
     return True
 
+cumple_restricciones([14,5,25,4,30])
+
+# Ejemplo de uso de las funciones
+valores_ejemplo = [10, 5, 20, 3, 25]
+max_z1 = max_Z1(valores_ejemplo)
+min_z2 = min_Z2(valores_ejemplo)
+restricciones = cumple_restricciones(valores_ejemplo)
+
+(max_z1, min_z2, restricciones)
+
 def scalarized_Z(valores, w_p, w_q):
     x1, x2, x3, x4, x5 = valores
     c_hat = 6000
@@ -95,6 +110,13 @@ def scalarized_Z(valores, w_p, w_q):
     # Función objetivo Z
     Z = calidad_ponderada + costo_ponderado
     return Z
+
+# Ejemplo de uso de la función
+#valores_ejemplo = [10, 5, 20, 3, 25]
+#w_p_ejemplo = 1
+#w_q_ejemplo = 0
+#resultado = scalarized_Z(valores_ejemplo, w_p_ejemplo, w_q_ejemplo)
+#print(resultado)
 
 def Levy(dim):
     beta = 1.5
@@ -113,91 +135,40 @@ def fitness(pos):
     x1, x2, x3, x4, x5 = pos
     return scalarized_Z([x1, x2, x3, x4, x5], w_p, w_q)
 
-import numpy as np
-
-# Definir las funciones sigmoides y find_y_interval para cada caso
-
-# Dominio x_1 = [0, 15]
-def sigmoid_x_1(x):
-    return 1 / (1 + np.exp(-0.6 * (x - 7.5)))
-
-def find_y_interval_x_1(x):
-    y = sigmoid_x_1(x)
-    interval_width = 1 / 16
-    for i in range(16):
-        if i * interval_width <= y < (i + 1) * interval_width:
-            return i
-    return 15 if y == 1 else None
-
-# Dominio x_2 = [0, 10]
-def sigmoid_x_2(x):
-    return 1 / (1 + np.exp(-1 * (x - 5)))
-
-def find_y_interval_x_2(x):
-    y = sigmoid_x_2(x)
-    interval_width = 1 / 11
-    for i in range(11):
-        if i * interval_width <= y < (i + 1) * interval_width:
-            return i
-    return 10 if y == 1 else None
-
-# Dominio x_3 = [0, 25]
-def sigmoid_x_3(x):
-    return 1 / (1 + np.exp(-0.35 * (x - 12.5)))
-
-def find_y_interval_x_3(x):
-    y = sigmoid_x_3(x)
-    interval_width = 1 / 26
-    for i in range(26):
-        if i * interval_width <= y < (i + 1) * interval_width:
-            return i
-    return 25 if y == 1 else None
-
-# Dominio x_4 = [0, 4]
-def sigmoid_x_4(x):
-    return 1 / (1 + np.exp(-2.5 * (x - 2)))
-
-def find_y_interval_x_4(x):
-    y = sigmoid_x_4(x)
-    if 0 <= y < 0.2:
-        return 0
-    elif 0.2 <= y < 0.4:
-        return 1
-    elif 0.4 <= y < 0.6:
-        return 2
-    elif 0.6 <= y < 0.8:
-        return 3
-    elif 0.8 <= y <= 1:
-        return 4
+'''
+1/(1+e^(-8x+4))
+'''
+def sigmoide_wacha(x):
+    a = 1 / (1 + np.exp(-8*x + 4))
+    if a > 0.5:
+        a = 1
     else:
-        return None
+        a = 0
+    return a
 
-# Dominio x_5 = [0, 30]
-def sigmoid_x_5(x):
-    return 1 / (1 + np.exp(-0.3 * (x - 15)))
+def valor_sigmoideado(arr):
+    result = []
+    for n in arr:
+        aux = n - int(n)
+        s = sigmoide_wacha(aux)
+        n = int(n) + s
+        result.append(n)
+    return result
 
-def find_y_interval_x_5(x):
-    y = sigmoid_x_5(x)
-    interval_width = 1 / 31
-    for i in range(31):
-        if i * interval_width <= y < (i + 1) * interval_width:
-            return i
-    return 30 if y == 1 else None
+# Prueba con un arreglo de entrada
+arr = np.array([11.42862355, 6.57140077, 16.08925247, 3.07572247, 24.43859152])
+output = valor_sigmoideado(arr)
+print(output)
 
-# Función maestra
-def master_sigmoid(arreglo):
-    x_1, x_2, x_3, x_4, x_5 = arreglo
-    x_1 = find_y_interval_x_1(x_1)
-    x_2 = find_y_interval_x_2(x_2)
-    x_3 = find_y_interval_x_3(x_3)
-    x_4 = find_y_interval_x_4(x_4)
-    x_5 = find_y_interval_x_5(x_5)
-    return [x_1, x_2, x_3, x_4, x_5]
 
-# Probar la función maestra con un ejemplo
-arreglo = [14.321, 0.312, 24.312, 3.321, 29.321]
-resultado = master_sigmoid(arreglo)
-print(f"El arreglo transformado es: {resultado}")
+
+#Sigfmoide para cambiar solo la parte decimal del valor de forma wacha
+
+#n = 6,91827391
+#aux = n - int(n)
+#s = sigmoide (aux)
+#s = 1 ~=
+#n = int(n) + s
 
 # Función del Algoritmo Harris Hawk Optimization (HHO)
 def HHO(N, T, dim, w_p, w_q):
@@ -220,7 +191,7 @@ def HHO(N, T, dim, w_p, w_q):
         for i in range(N):
             # Asegurar que los halcones estén dentro de los límites
             halcones[i] = np.clip(halcones[i], lb, ub)
-            halcones[i] = master_sigmoid(halcones[i])
+            halcones[i] = valor_sigmoideado(halcones[i])
 
             # Calcular la aptitud del halcón
             if cumple_restricciones(halcones[i]):
@@ -239,7 +210,7 @@ def HHO(N, T, dim, w_p, w_q):
                 q = random.random()
                 if q >= 0.5:
                     halcones[i] = X_rabbit - np.random.uniform() * np.abs(X_rabbit - 2 * np.random.uniform() * halcones[i])
-                    halcones[i] = master_sigmoid(halcones[i])
+                    halcones[i] = valor_sigmoideado(halcones[i])
                     '''
                     while True:
                         if cumple_restricciones(halcones[i]):
@@ -249,7 +220,7 @@ def HHO(N, T, dim, w_p, w_q):
                     '''
                 else:
                     halcones[i] = (X_rabbit - halcones[i]) - np.random.uniform() * (lb + np.random.uniform() * (ub - lb))
-                    halcones[i] = master_sigmoid(halcones[i])
+                    halcones[i] = valor_sigmoideado(halcones[i])
                     '''
                     while True:
                         if cumple_restricciones(halcones[i]):
@@ -263,53 +234,49 @@ def HHO(N, T, dim, w_p, w_q):
                     if abs(E) >= 0.5:
                         ΔX = X_rabbit - halcones[i]
                         halcones[i] = ΔX - E * np.abs(J * X_rabbit - halcones[i])
-                        halcones[i] = master_sigmoid(halcones[i])
+                        halcones[i] = valor_sigmoideado(halcones[i])
                     else:
                         ΔX = X_rabbit - halcones[i]
                         halcones[i] = X_rabbit - E * np.abs(ΔX)
-                        halcones[i] = master_sigmoid(halcones[i])
+                        halcones[i] = valor_sigmoideado(halcones[i])
                 else:
                     if abs(E) >= 0.5:
                         Y = X_rabbit - E * np.abs(J * X_rabbit - halcones[i])
                         Z = Y + np.random.uniform() * Levy(dim)
                         if fitness(Y) < fitness(halcones[i]):
                             halcones[i] = Y
-                            halcones[i] = master_sigmoid(halcones[i])
+                            halcones[i] = valor_sigmoideado(halcones[i])
                         elif fitness(Z) < fitness(halcones[i]):
                             halcones[i] = Z
-                            halcones[i] = master_sigmoid(halcones[i])
+                            halcones[i] = valor_sigmoideado(halcones[i])
                     else:
                         Y = X_rabbit - E * np.abs(J * X_rabbit - halcones[i])
                         Z = Y + np.random.uniform() * Levy(dim)
                         if fitness(Y) < fitness(halcones[i]):
                             halcones[i] = Y
-                            halcones[i] = master_sigmoid(halcones[i])
+                            halcones[i] = valor_sigmoideado(halcones[i])
                         elif fitness(Z) < fitness(halcones[i]):
                             halcones[i] = Z
-                            halcones[i] = master_sigmoid(halcones[i])
+                            halcones[i] = valor_sigmoideado(halcones[i])
 
             # Asegurar que los halcones estén dentro de los límites después de moverse
             halcones[i] = np.clip(halcones[i], lb, ub)
+
         if t % 1 == 0:
             print(scalarized_Z(X_rabbit, w_p, w_q))
     return X_rabbit
 
 # Ejemplo de configuración y ejecución del algoritmo
-N = 5  # Tamaño de la población
-T = 30 # Número máximo de iteraciones
+N = 10  # Tamaño de la población
+T = 50 # Número máximo de iteraciones
 dim = 5  # Dimensiones del problema
-w_p = 0.3  # Peso para el costo
-w_q = 0.7  # Peso para la calidad
+w_p = 0.5  # Peso para el costo
+w_q = 0.5  # Peso para la calidad
 
 # Ejecución del HHO
 best_position = HHO(N, T, dim, w_p, w_q)
 print("Mejor posición encontrada:", best_position)
 
-import numpy as np
-import pandas as pd
-import random
-import math
-import os
 
 def perform_multiple_HHO(N, T, dim, C, w_p, w_q, filename):
     results = []
@@ -324,8 +291,8 @@ def perform_multiple_HHO(N, T, dim, C, w_p, w_q, filename):
     df.to_csv(f'data/{filename}', index=False)
 
 # Parámetros del problema
-N = 5
-T = 30
+N = 10
+T = 50
 dim = 5
 C = 30
 
@@ -346,7 +313,6 @@ for w_p, w_q, filename in scenarios:
 
 print(outputs)
 
-import matplotlib.pyplot as plt
 
 def calculate_objectives(filename):
     # Leer los datos del CSV
@@ -381,10 +347,8 @@ filenames = [
 
 plot_pareto_front(filenames)
 
-import sys
-import pandas as pd
-from io import StringIO
-import os
+
+
 
 def capture_and_save_output(N, T, dim, w_p, w_q, filename):
     # Redirigir la salida estándar
@@ -409,8 +373,8 @@ def capture_and_save_output(N, T, dim, w_p, w_q, filename):
     df.to_csv(f'data/{filename}', index=False)
 
 # Parámetros del algoritmo
-N = 5
-T = 30
+N = 10
+T = 50
 dim = 5
 # Capturar la salida de HHO y guardarla en un archivo CSV
 w_p = 1
@@ -438,8 +402,6 @@ w_q = 1
 
 capture_and_save_output(N, T, dim, w_p, w_q, "Resultado_Scalarized_HHO;W_P_0;W_Q_1.csv")
 
-import matplotlib.pyplot as plt
-import pandas as pd
 
 def plot_csv_files(filenames):
     plt.figure(figsize=(10, 6))
@@ -473,217 +435,3 @@ filenames = [
 
 # Llamar a la función para graficar
 plot_csv_files(filenames)
-
-'''
-dominio x_1 = [0,15]
-1/(1+e^(-0.6(x-7.5)))
-'''
-import numpy as np
-import matplotlib.pyplot as plt
-
-# Definir la función sigmoide
-def sigmoid_x_1(x):
-    return 1 / (1 + np.exp(-0.6 * (x - 7.5)))
-
-# Dividir el eje y en 16 intervalos iguales y determinar el intervalo de un valor dado
-def find_y_interval_x_1(x):
-    y = sigmoid_x_1(x)
-    interval_width = 1 / 16
-    for i in range(16):
-        if i * interval_width <= y < (i + 1) * interval_width:
-            return i
-    return 15 if y == 1 else None
-
-# Probar la función con un valor dado
-x_value = 3  # Cambia este valor para probar diferentes entradas
-interval = find_y_interval_x_1(x_value)
-print(f"El valor x = {x_value} cae en el intervalo y = {interval}")
-
-# Graficar la sigmoide y los intervalos en el eje y
-x = np.linspace(0, 15, 400)
-y = sigmoid_x_1(x)
-
-plt.figure(figsize=(10, 6))
-plt.plot(x, y, label='Sigmoide: 1 / (1 + e^{-0.6(x - 7.5)})')
-for i in range(1, 16):
-    plt.axhline(y=i * (1 / 16), color='red', linestyle='--')
-plt.scatter([x_value], [sigmoid_x_1(x_value)], color='black', zorder=5)
-plt.text(x_value, sigmoid_x_1(x_value), f'  ({x_value}, {sigmoid_x_1(x_value):.2f})', color='black')
-plt.xlabel('x')
-plt.ylabel('σ(x)')
-plt.title('Sigmoide con Intervalos en el Eje y')
-plt.legend()
-plt.grid(True)
-plt.show()
-
-'''
-dominio x_2 = [0,10]
-1/(1+e^(-1(x-5)))
-'''
-
-# Definir la función sigmoide
-def sigmoid_x_2(x):
-    return 1 / (1 + np.exp(-1 * (x - 5)))
-
-# Dividir el eje y en 11 intervalos iguales y determinar el intervalo de un valor dado
-def find_y_interval_x_2(x):
-    y = sigmoid_x_2(x)
-    interval_width = 1 / 11
-    for i in range(11):
-        if i * interval_width <= y < (i + 1) * interval_width:
-            return i
-    return 10 if y == 1 else None
-
-# Probar la función con un valor dado
-x_value = 6  # Cambia este valor para probar diferentes entradas
-interval = find_y_interval_x_2(x_value)
-print(f"El valor x = {x_value} cae en el intervalo y = {interval}")
-
-# Graficar la sigmoide y los intervalos en el eje y
-x = np.linspace(0, 10, 400)
-y = sigmoid_x_2(x)
-
-plt.figure(figsize=(10, 6))
-plt.plot(x, y, label='Sigmoide: 1 / (1 + e^{-1(x - 5)})')
-for i in range(1, 11):
-    plt.axhline(y=i * (1 / 11), color='red', linestyle='--')
-plt.scatter([x_value], [sigmoid_x_2(x_value)], color='black', zorder=5)
-plt.text(x_value, sigmoid_x_2(x_value), f'  ({x_value}, {sigmoid_x_2(x_value):.2f})', color='black')
-plt.xlabel('x')
-plt.ylabel('σ(x)')
-plt.title('Sigmoide con Intervalos en el Eje y')
-plt.legend()
-plt.grid(True)
-plt.show()
-
-'''
-dominio x_3 = [0,25]
-1/(1+e^(-0.35(x-12.5)))
-'''
-# Definir la función sigmoide
-def sigmoid_x_3(x):
-    return 1 / (1 + np.exp(-0.35 * (x - 12.5)))
-
-# Dividir el eje y en 26 intervalos iguales y determinar el intervalo de un valor dado
-def find_y_interval_x_3(x):
-    y = sigmoid_x_3(x)
-    interval_width = 1 / 26
-    for i in range(26):
-        if i * interval_width <= y < (i + 1) * interval_width:
-            return i
-    return 25 if y == 1 else None
-
-# Probar la función con un valor dado
-x_value = 20  # Cambia este valor para probar diferentes entradas
-interval = find_y_interval_x_3(x_value)
-print(f"El valor x = {x_value} cae en el intervalo y = {interval}")
-
-# Graficar la sigmoide y los intervalos en el eje y
-x = np.linspace(0, 25, 400)
-y = sigmoid_x_3(x)
-
-plt.figure(figsize=(10, 6))
-plt.plot(x, y, label='Sigmoide: 1 / (1 + e^{-0.35(x - 12.5)})')
-for i in range(1, 26):
-    plt.axhline(y=i * (1 / 26), color='red', linestyle='--')
-plt.scatter([x_value], [sigmoid_x_3(x_value)], color='black', zorder=5)
-plt.text(x_value, sigmoid_x_3(x_value), f'  ({x_value}, {sigmoid_x_3(x_value):.2f})', color='black')
-plt.xlabel('x')
-plt.ylabel('σ(x)')
-plt.title('Sigmoide con Intervalos en el Eje y')
-plt.legend()
-plt.grid(True)
-plt.show()
-
-'''
-dominio x_4 = [0,4]
-1/(1+e^(-2.5(x-2)))
-'''
-
-import numpy as np
-
-# Definir la función sigmoide
-def sigmoid_x_4(x):
-    return 1 / (1 + np.exp(-2.5 * (x - 2)))
-
-# Dividir el eje y en cinco intervalos iguales y determinar el intervalo de un valor dado
-def find_y_interval_x_4(x):
-    y = sigmoid_x_4(x)
-    if 0 <= y < 0.2:
-        return 0
-    elif 0.2 <= y < 0.4:
-        return 1
-    elif 0.4 <= y < 0.6:
-        return 2
-    elif 0.6 <= y < 0.8:
-        return 3
-    elif 0.8 <= y <= 1:
-        return 4
-    else:
-        return None
-
-# Probar la función con un valor dado
-x_value = 3.321  # Cambia este valor para probar diferentes entradas
-interval = find_y_interval_x_4(x_value)
-print(f"El valor x = {x_value} cae en el intervalo y = {interval}")
-
-# Graficar la sigmoide y los intervalos en el eje y
-import matplotlib.pyplot as plt
-
-x = np.linspace(0, 4, 400)
-y = sigmoid_x_4(x)
-
-plt.figure(figsize=(10, 6))
-plt.plot(x, y, label='Sigmoide: 1 / (1 + e^{-2.5(x - 2)})')
-plt.axhline(y=0.2, color='red', linestyle='--', label='Intervalo 0.2')
-plt.axhline(y=0.4, color='orange', linestyle='--', label='Intervalo 0.4')
-plt.axhline(y=0.6, color='green', linestyle='--', label='Intervalo 0.6')
-plt.axhline(y=0.8, color='blue', linestyle='--', label='Intervalo 0.8')
-plt.axhline(y=1.0, color='purple', linestyle='--', label='Intervalo 1.0')
-plt.scatter([x_value], [sigmoid_x_4(x_value)], color='black', zorder=5)
-plt.text(x_value, sigmoid_x_4(x_value), f'  ({x_value}, {sigmoid_x_4(x_value):.2f})', color='black')
-plt.xlabel('x')
-plt.ylabel('σ(x)')
-plt.title('Sigmoide con Intervalos en el Eje y')
-plt.legend()
-plt.grid(True)
-plt.show()
-
-'''
-dominio x_5 = [0,30]
-1/(1+e^(-0.3(x-15)))
-'''
-# Definir la función sigmoide
-def sigmoid_x_5(x):
-    return 1 / (1 + np.exp(-0.3 * (x - 15)))
-
-# Dividir el eje y en 31 intervalos iguales y determinar el intervalo de un valor dado
-def find_y_interval_x_5(x):
-    y = sigmoid_x_5(x)
-    interval_width = 1 / 31
-    for i in range(31):
-        if i * interval_width <= y < (i + 1) * interval_width:
-            return i
-    return 30 if y == 1 else None
-
-# Probar la función con un valor dado
-x_value = 20  # Cambia este valor para probar diferentes entradas
-interval = find_y_interval_x_5(x_value)
-print(f"El valor x = {x_value} cae en el intervalo y = {interval}")
-
-# Graficar la sigmoide y los intervalos en el eje y
-x = np.linspace(0, 30, 400)
-y = sigmoid_x_5(x)
-
-plt.figure(figsize=(10, 6))
-plt.plot(x, y, label='Sigmoide: 1 / (1 + e^{-0.3(x - 15)})')
-for i in range(1, 31):
-    plt.axhline(y=i * (1 / 31), color='red', linestyle='--')
-plt.scatter([x_value], [sigmoid_x_5(x_value)], color='black', zorder=5)
-plt.text(x_value, sigmoid_x_5(x_value), f'  ({x_value}, {sigmoid_x_5(x_value):.2f})', color='black')
-plt.xlabel('x')
-plt.ylabel('σ(x)')
-plt.title('Sigmoide con Intervalos en el Eje y')
-plt.legend()
-plt.grid(True)
-plt.show()
